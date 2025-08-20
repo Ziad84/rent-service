@@ -1,4 +1,4 @@
-package com.RentalApplication.RT.Entity;
+package com.RentalApplication.rent.service.Entity;
 
 
 import jakarta.persistence.*;
