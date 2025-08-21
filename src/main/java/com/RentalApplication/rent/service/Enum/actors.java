@@ -1,6 +1,6 @@
 package com.RentalApplication.rent.service.Enum;
 
-public enum Actors {
+public enum actors {
     PROPERTY_OWNER,
     CLIENT
 }
