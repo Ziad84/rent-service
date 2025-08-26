@@ -13,11 +13,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class users {
+public class Users  {
 
     @Id
-    @Column(name = "id", columnDefinition = "CHAR(36)")
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
 
     @Column(name = "name", nullable = false, length = 100)
     private String name;
@@ -25,7 +26,7 @@ public class users {
     @Column(name = "email", nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password")
     private String password;
 
     @Column(name = "phone_number", length = 20)
@@ -33,7 +34,7 @@ public class users {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
-    private roles role;
+    private Roles role;
 
     @Column(name = "created_by")
     private String createdBy;

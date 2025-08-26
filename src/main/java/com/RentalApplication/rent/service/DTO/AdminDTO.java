@@ -1,16 +1,13 @@
-package com.RentalApplication.rent.service.dto;
+package com.RentalApplication.rent.service.DTO;
 
-import jdk.jshell.Snippet;
 import lombok.*;
-
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class adminDTO {
-    private UUID id;
+public class AdminDTO {
+    private Integer id;
     private String name;
     private String email;
     private String phoneNumber;

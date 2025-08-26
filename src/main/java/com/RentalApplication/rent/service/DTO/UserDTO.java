@@ -1,15 +1,17 @@
-package com.RentalApplication.rent.service.dto;
+package com.RentalApplication.rent.service.DTO;
 
-import lombok.*;
 
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class userDTO {
-    private UUID id;
+public class UserDTO {
+    private Integer id;
     private String name;
     private String email;
     private String password;

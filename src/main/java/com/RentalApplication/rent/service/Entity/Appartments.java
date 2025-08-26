@@ -12,20 +12,21 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class appartments {
+public class Appartments {
 
 
     @Id
-    @Column(name = "id", columnDefinition = "CHAR(36)")
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
-    private users owner;
+    private Users owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id")
-    private users client;
+    private Users client;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;
