@@ -1,19 +1,24 @@
 package com.RentalApplication.rent.service.Security;
 
-import io.jsonwebtoken.Jwts;
+import com.RentalApplication.rent.service.Entity.Users;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
+import java.util.Collection;
+import java.util.Collections;
 
 
 @Component
@@ -28,9 +33,9 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        final String authHeader = request.getHeader("Authorization"); // bearer 32uy4g2e32u
         final String token;
-        final String username;
+        String username = null;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -38,18 +43,67 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         }
 
         token = authHeader.substring(7);
-        username = jwtService.extractUsername(token);
 
+        try {
+
+
+            username = jwtService.extractUsername(token);
+
+
+        } catch (ExpiredJwtException e) {
+            username = e.getClaims().getSubject();
+        } catch (Exception e) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            if (jwtService.isTokenValid(token)) {
+
+            try {
+                if (jwtService.isTokenValid(token)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+
+
+                }
+            } catch (ExpiredJwtException e) {
+                // Generate new token
+                String newToken = jwtService.generateToken((Users) userDetails);
+                // Add new token to response header
+                response.setHeader("Authorization", "Bearer " + newToken);
+
+                // Set authentication with new token
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            }
+        }
+
+
+            /*if (jwtService.isTokenValid(token)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-        }
+
+             */
+
+
 
         filterChain.doFilter(request, response);
     }
-}
+
+
+
+    }

@@ -1,28 +1,27 @@
 package com.RentalApplication.rent.service.Services.Implementation;
 
-import com.RentalApplication.rent.service.Entity.appartments;
-import com.RentalApplication.rent.service.Entity.users;
+import com.RentalApplication.rent.service.Entity.Appartments;
+import com.RentalApplication.rent.service.Entity.Users;
 import com.RentalApplication.rent.service.Repository.AppartmentsRepository;
-import com.RentalApplication.rent.service.Repository.usersRepository;
-import com.RentalApplication.rent.service.Services.Interfaces.appartmentsService;
-import com.RentalApplication.rent.service.dto.appartmentsDTO;
+import com.RentalApplication.rent.service.Repository.UsersRepository;
+import com.RentalApplication.rent.service.Services.Interfaces.AppartmentsService;
+import com.RentalApplication.rent.service.DTO.AppartmentsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class appartmentsImp implements appartmentsService {
+public class AppartmentsImp implements AppartmentsService {
 
     private final AppartmentsRepository apartmentsRepository;
-    private final usersRepository userRepository;
+    private final UsersRepository userRepository;
 
-    private appartmentsDTO mapApartmentToDTO(appartments apartment, String currentUserRole) {
-        appartmentsDTO dto = appartmentsDTO.builder()
+    private AppartmentsDTO mapApartmentToDTO(Appartments apartment, String currentUserRole) {
+        AppartmentsDTO dto = AppartmentsDTO.builder()
                 .id(apartment.getId())
                 .title(apartment.getTitle())
                 .monthlyRent(apartment.getMonthlyRent())
@@ -44,7 +43,7 @@ public class appartmentsImp implements appartmentsService {
     }
 
     @Override
-    public List<appartmentsDTO> getAllApartments(String currentUserRole, UUID currentUserId) {
+    public List<AppartmentsDTO> getAllApartments(String currentUserRole, Integer currentUserId) {
         return apartmentsRepository.findAll()
                 .stream()
                 .filter(a -> !a.getIsDeleted())
@@ -53,22 +52,22 @@ public class appartmentsImp implements appartmentsService {
     }
 
     @Override
-    public appartmentsDTO getApartmentById(UUID id, String currentUserRole, UUID currentUserId) {
-        appartments apartment = apartmentsRepository.findById(id)
+    public AppartmentsDTO getApartmentById(Integer id, String currentUserRole, Integer currentUserId) {
+        Appartments apartment = apartmentsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Apartment not found"));
         return mapApartmentToDTO(apartment, currentUserRole);
     }
 
     @Override
-    public appartmentsDTO createApartment(appartmentsDTO dto, String currentUserRole, UUID currentUserId) {
+    public AppartmentsDTO createApartment(AppartmentsDTO dto, String currentUserRole, Integer currentUserId) {
         if (!"OWNER".equals(currentUserRole) && !"ADMIN".equals(currentUserRole)) {
             throw new RuntimeException("Permission denied");
         }
 
-        users owner = userRepository.findById(currentUserId)
+        Users owner = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new RuntimeException("Owner not found"));
 
-        appartments apartment = appartments.builder()
+        Appartments apartment = Appartments.builder()
                 .title(dto.getTitle())
                 .monthlyRent(dto.getMonthlyRent())
                 .roomsNumber(dto.getRoomsNumber())
@@ -80,8 +79,8 @@ public class appartmentsImp implements appartmentsService {
     }
 
     @Override
-    public appartmentsDTO updateApartment(UUID id, appartmentsDTO dto, String currentUserRole, UUID currentUserId) {
-        appartments apartment = apartmentsRepository.findById(id)
+    public AppartmentsDTO updateApartment(Integer id, AppartmentsDTO dto, String currentUserRole, Integer currentUserId) {
+        Appartments apartment = apartmentsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Apartment not found"));
 
         if ("OWNER".equals(currentUserRole) && !apartment.getOwner().getId().equals(currentUserId)) {
@@ -99,8 +98,8 @@ public class appartmentsImp implements appartmentsService {
     }
 
     @Override
-    public void deleteApartment(UUID id, String currentUserRole, UUID currentUserId) {
-        appartments apartment = apartmentsRepository.findById(id)
+    public void deleteApartment(Integer id, String currentUserRole, Integer currentUserId) {
+        Appartments apartment = apartmentsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Apartment not found"));
 
         if ("OWNER".equals(currentUserRole) && !apartment.getOwner().getId().equals(currentUserId)) {
@@ -114,7 +113,7 @@ public class appartmentsImp implements appartmentsService {
     }
 
     @Override
-    public List<appartmentsDTO> viewAvailableApartments() {
+    public List<AppartmentsDTO> viewAvailableApartments() {
         return apartmentsRepository.findAll()
                 .stream()
                 .filter(a -> !a.getIsDeleted() && a.getClient() == null)
@@ -123,21 +122,21 @@ public class appartmentsImp implements appartmentsService {
     }
 
     @Override
-    public appartmentsDTO rentApartment(UUID apartmentId, UUID clientId) {
-        appartments apartment = apartmentsRepository.findById(apartmentId)
+    public AppartmentsDTO rentApartment(Integer apartmentId, Integer clientId) {
+        Appartments apartment = apartmentsRepository.findById(apartmentId)
                 .orElseThrow(() -> new RuntimeException("Apartment not found"));
 
         if (apartment.getClient() != null) {
             throw new RuntimeException("Apartment is already rented");
         }
 
-        users client = userRepository.findById(clientId)
+        Users client = userRepository.findById(clientId)
                 .orElseThrow(() -> new RuntimeException("Client not found"));
 
         apartment.setClient(client);
         apartment.setRentedAt(LocalDateTime.now());
 
-        appartments savedApartment = apartmentsRepository.save(apartment);
+        Appartments savedApartment = apartmentsRepository.save(apartment);
 
         return mapApartmentToDTO(savedApartment, "CLIENT");
 
