@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AppartmentsDTO {
+public class ApartmentsDTO {
     private Integer id;
     private String title;
     private Integer monthlyRent;

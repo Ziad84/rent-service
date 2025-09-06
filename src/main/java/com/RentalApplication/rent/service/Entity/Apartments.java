@@ -1,46 +1,45 @@
 package com.RentalApplication.rent.service.Entity;
 
+
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-
 @Entity
-@Table(name = "users")
+@Table(name = "appartments")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Users  {
+public class Apartments {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
 
-    @Column(name = "email", nullable = false, unique = true, length = 150)
-    private String email;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id")
+    private User client;
 
-    @Column(name = "password")
-    private String password;
+    @Column(name = "title", nullable = false, length = 100)
+    private String title;
 
-    @Column(name = "phone_number", length = 20)
-    private String phoneNumber;
+    @Column(name = "monthly_rent", nullable = false)
+    private Integer monthlyRent;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id", nullable = false)
-    private Roles role;
+    @Column(name = "rooms_number")
+    private Integer roomsNumber;
 
-    @Column(name = "created_by")
-    private String createdBy;
+    @Column(name = "rented_at")
+    private LocalDateTime rentedAt;
 
-    @Column(name = "updated_by")
-    private String updatedBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -61,6 +60,5 @@ public class Users  {
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 
 }

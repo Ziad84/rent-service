@@ -1,115 +1,105 @@
 package com.RentalApplication.rent.service.Security;
 
-import com.RentalApplication.rent.service.Entity.Users;
+import com.RentalApplication.rent.service.Entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import javax.crypto.SecretKey;
-import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
 
+
+
+@Slf4j
 @Service
 public class JWTService {
- /*   private final Key SECRET_KEY = Keys.hmacShaKeyFor(
-            Decoders.BASE64.decode("7F9h4gq19X3X1Lq5b1E3a6r9E9m7x0XlU0W2c6q1z0g="));
-    private final long EXPIRATION_TIME = 24 * 60 * 60 * 1000; // 24h
-*/
 
-    /*private static final String SECRET = "mysupersecretkeymysupersecretkey1234"; // >= 32 chars
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private final SecretKey key;
+    private final long tokenExpirationMs;
 
-     */
+    public JWTService(
+            @Value("${jwt.secret}") String base64Secret,
+            @Value("${jwt.expiration-ms}") long tokenExpirationMs
+    ) {
 
-    private static final String SECRET = "mysupersecretkeymysupersecretkey1234"; // >= 32 chars
-    private static final long TOKEN_EXPIRATION = 1000 * 60 * 60; // 1 hour in milliseconds
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes());
+        this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(base64Secret));
+        this.tokenExpirationMs = tokenExpirationMs;
+    }
 
 
-    public String generateToken(Users user) {
+    public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getEmail())
-                .claim("role", user.getRole().getName())
+                .setSubject(user.getId().toString()) // Using ID instead of email
+                .claim("roles", user.getRole().getName())
+                .claim("email", user.getEmail()) // Optional: keep email as a claim
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION))
+                .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationMs))
                 .signWith(key)
                 .compact();
     }
 
-
-
-    // Extract username/email from token
-    public String extractUsername(String token) {
-      //  return getClaims(token).getSubject();
-
+    // Extract user ID from token
+    public String extractUserId(String token) {
         try {
             return getClaims(token).getSubject();
         } catch (ExpiredJwtException e) {
-            // Return the subject from expired token
             return e.getClaims().getSubject();
         }
-
     }
 
-    // Extract role from token
-    public String extractRole(String token) {
-        //return (String) getClaims(token).get("role");
-
+    // For backward compatibility if needed
+    public String extractUsername(String token) {
         try {
-            return (String) getClaims(token).get("role");
+            return (String) getClaims(token).get("email");
         } catch (ExpiredJwtException e) {
-            // Return the role from expired token
-            return (String) e.getClaims().get("role");
+            return (String) e.getClaims().get("email");
         }
-
     }
 
+    public String extractRole(String token) {
+        try {
+            return (String) getClaims(token).get("roles");
+        } catch (ExpiredJwtException e) {
+            return (String) e.getClaims().get("roles");
+        }
+    }
 
     public boolean isTokenExpired(String token) {
         try {
-            getClaims(token);
-            return false;
+            return getClaims(token).getExpiration().before(new Date());
         } catch (ExpiredJwtException e) {
             return true;
         } catch (Exception e) {
+            log.error("Error checking token expiration: {}", e.getMessage());
             return true;
         }
     }
 
-
-    // Validate token expiration
     public boolean isTokenValid(String token) {
         try {
-            return !getClaims(token).getExpiration().before(new Date());
+            return !isTokenExpired(token);
         } catch (Exception e) {
+            log.error("Error validating token: {}", e.getMessage());
             return false;
         }
     }
 
     private Claims getClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key) // same key used for signing
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
 
-    public String handleToken(String token, Users user) {
+    public String handleToken(String token, User user) {
         if (token == null || !isTokenValid(token) || isTokenExpired(token)) {
             return generateToken(user);
         }
         return token;
     }
-
-
-
-
-
-
 }

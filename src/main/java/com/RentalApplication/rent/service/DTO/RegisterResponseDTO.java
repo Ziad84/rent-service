@@ -13,9 +13,9 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class RegiseteResponseDTO {
+public class RegisterResponseDTO {
     private String message;
-    private boolean success;
+    private boolean status;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, String> errors;

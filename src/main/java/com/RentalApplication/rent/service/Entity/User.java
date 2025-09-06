@@ -1,45 +1,45 @@
 package com.RentalApplication.rent.service.Entity;
 
-
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
+
 @Entity
-@Table(name = "appartments")
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Appartments {
-
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private Users owner;
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id")
-    private Users client;
+    @Column(name = "email", nullable = false, unique = true, length = 150)
+    private String email;
 
-    @Column(name = "title", nullable = false, length = 100)
-    private String title;
+    @Column(name = "password")
+    private String password;
 
-    @Column(name = "monthly_rent", nullable = false)
-    private Integer monthlyRent;
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
 
-    @Column(name = "rooms_number")
-    private Integer roomsNumber;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Roles role;
 
-    @Column(name = "rented_at")
-    private LocalDateTime rentedAt;
+    @Column(name = "created_by")
+    private String createdBy;
 
+    @Column(name = "updated_by")
+    private String updatedBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -54,11 +54,17 @@ public class Appartments {
     public void prePersist() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+
+        createdBy = "System";
+        updatedBy = "System";
+
     }
 
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
+        updatedBy = "System";
     }
+
 
 }

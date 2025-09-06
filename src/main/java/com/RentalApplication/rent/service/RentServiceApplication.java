@@ -14,4 +14,5 @@ public class RentServiceApplication {
 		SpringApplication.run(RentServiceApplication.class, args);
 	}
 
+
 }

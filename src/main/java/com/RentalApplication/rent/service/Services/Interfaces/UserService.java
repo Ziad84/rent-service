@@ -8,16 +8,15 @@ import java.util.List;
 
 public interface UserService {
 
-    // --- Admin operations ---
     List<UserDTO> getAllUsersAsAdmin();
     UserDTO getUserByIdAsAdmin(Integer id);
     void deleteUserAsAdmin(Integer id);
 
-    // --- Client/Owner operations ---
     ResponseDTO registerUser(RegisterUserDTO registerDTO);       // register as OWNER or CLIENT
     ResponseDTO login(String username, String password); // returns JWT token
-    UserDTO updateUser(Integer id, UserDTO usersDTO);   // user updates their profile
+    UserDTO updateUser(Integer id, UserDTO userDTO);   // user updates their profile
     void deleteUser(Integer id);// user deletes their account
+
 
 
 }
