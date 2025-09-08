@@ -33,40 +33,26 @@ public class JWTService {
 
     public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getId().toString()) // Using ID instead of email
+                .setSubject(user.getId().toString())
                 .claim("roles", user.getRole().getName())
-                .claim("email", user.getEmail()) // Optional: keep email as a claim
+                .claim("email", user.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationMs))
                 .signWith(key)
                 .compact();
     }
 
-    // Extract user ID from token
+
     public String extractUserId(String token) {
         try {
             return getClaims(token).getSubject();
-        } catch (ExpiredJwtException e) {
+        }
+        catch (ExpiredJwtException e) {
             return e.getClaims().getSubject();
         }
     }
 
-    // For backward compatibility if needed
-    public String extractUsername(String token) {
-        try {
-            return (String) getClaims(token).get("email");
-        } catch (ExpiredJwtException e) {
-            return (String) e.getClaims().get("email");
-        }
-    }
 
-    public String extractRole(String token) {
-        try {
-            return (String) getClaims(token).get("roles");
-        } catch (ExpiredJwtException e) {
-            return (String) e.getClaims().get("roles");
-        }
-    }
 
     public boolean isTokenExpired(String token) {
         try {
@@ -74,7 +60,6 @@ public class JWTService {
         } catch (ExpiredJwtException e) {
             return true;
         } catch (Exception e) {
-            log.error("Error checking token expiration: {}", e.getMessage());
             return true;
         }
     }
@@ -83,7 +68,6 @@ public class JWTService {
         try {
             return !isTokenExpired(token);
         } catch (Exception e) {
-            log.error("Error validating token: {}", e.getMessage());
             return false;
         }
     }
@@ -95,11 +79,5 @@ public class JWTService {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
-    public String handleToken(String token, User user) {
-        if (token == null || !isTokenValid(token) || isTokenExpired(token)) {
-            return generateToken(user);
-        }
-        return token;
-    }
 }
+

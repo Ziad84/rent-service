@@ -9,6 +9,7 @@ import com.RentalApplication.rent.service.Repository.AppartmentsRepository;
 import com.RentalApplication.rent.service.Repository.UserRepository;
 import com.RentalApplication.rent.service.Services.Interfaces.ApartmentsService;
 import com.RentalApplication.rent.service.DTO.ApartmentsDTO;
+import com.RentalApplication.rent.service.Utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -41,21 +42,17 @@ public class ApartmentsImp implements ApartmentsService {
                 .title(apartment.getTitle())
                 .monthlyRent(apartment.getMonthlyRent())
                 .roomsNumber(apartment.getRoomsNumber())
+                .ownerId(apartment.getOwner().getId())
                 .rentedAt(apartment.getRentedAt());
 
-        // Show owner info only for ADMIN and OWNER roles
-        if (!Client.equals(currentUserRole)) {
-            builder.ownerId(apartment.getOwner().getId());
-        }
 
 
 
-        // Show client info only for ADMIN and involved parties
-        if (apartment.getClient() != null) {
+
+      if (apartment.getClient() != null) {
             builder.clientId(apartment.getClient().getId());
         }
 
-        // Show deletion status only to ADMIN
         if (Admin.equals(currentUserRole)) {
             builder.isDeleted(apartment.getIsDeleted());
         }
@@ -68,71 +65,43 @@ public class ApartmentsImp implements ApartmentsService {
 
     @Override
     public List<ApartmentsDTO> getAllApartments() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails ud)) {
-            throw new AccessDeniedException("Unauthenticated");
-        }
+        User current = SecurityUtils.getCurrentUser(userRepository);
+        String roleName = current.getRole().getName();
 
-        // from principal
-        String email = ((UserDetails) auth.getPrincipal()).getUsername();
-
-        // derive role name from authorities (ROLE_Owner -> Owner)
-        String currentUserRole = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)           // e.g. ROLE_Owner
-                .findFirst()                                   // assuming single role
-                .map(a -> a.startsWith("ROLE_") ? a.substring(5) : a)
-                .orElseThrow(() -> new RuntimeException("No role assigned"));
-
-        // need the user id -> load once by email
-        User current = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Integer currentUserId = current.getId();
 
         List<Apartments> apartments = apartmentsRepository.findAll();
 
         return apartments.stream()
                 .filter(apartment -> {
-                    if (Admin.equals(currentUserRole)) {
-                        return true; // Admin sees all (including deleted)
+                    if (Admin.equals(roleName)) {
+                        return true;
                     }
-                    if (Owner.equals(currentUserRole)) {
-                        // Owner sees all of THEIR apartments (rented or not), but not deleted
+                    if (Owner.equals(roleName)) {
                         return !apartment.getIsDeleted();
-
                     }
-                    if (Client.equals(currentUserRole)) {
-                        // Client sees ALL non-deleted apartments (even if rented by someone else)
+                    if (Client.equals(roleName)) {
                         return !apartment.getIsDeleted();
                     }
                     return false;
                 })
-                .map(apartment -> mapApartmentToDTO(apartment, currentUserRole))
-                .collect(java.util.stream.Collectors.toList());
+                .map(apartment -> mapApartmentToDTO(apartment, roleName))
+                .collect(Collectors.toList());
     }
 
 
 
     @Override
     public List<ApartmentsDTO> viewAvailableApartments() {
-        // figure out the caller's role label: "Admin" / "Owner" / "Client"
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new AccessDeniedException("Unauthenticated");
-        }
-        String currentUserRole = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)   // e.g. ROLE_Owner
-                .findFirst()
-                .map(a -> a.startsWith("ROLE_") ? a.substring(5) : a)                    // → Owner/Admin/Client
-                .orElse("Client"); // safe default
+
+        User current = SecurityUtils.getCurrentUser(userRepository);
+        String roleName = current.getRole().getName();
 
         return apartmentsRepository.findByIsDeleted(false).stream()
                 .filter(a -> a.getClient() == null)
                 .filter(a -> a.getMonthlyRent() != null && a.getMonthlyRent() > 0)
-                .filter(a -> a.getRoomsNumber()  != null && a.getRoomsNumber()  > 0)
+                .filter(a -> a.getRoomsNumber()  != null && a.getRoomsNumber() > 0)
                 .map(a -> {
-                    ApartmentsDTO dto = mapApartmentToDTO(a, currentUserRole);
-                    // ensure clients see the owner on "available" list
-                    dto.setOwnerId(a.getOwner().getId());
+                    ApartmentsDTO dto = mapApartmentToDTO(a, roleName);
                     return dto;
                 })
                 .toList();
@@ -141,72 +110,50 @@ public class ApartmentsImp implements ApartmentsService {
 
     @Override
     public ApartmentsDTO getApartmentById(Integer id) {
-        // If role/id not provided, resolve from the current principal once here
         if (id == null) {
             throw new IllegalArgumentException("Apartment ID cannot be null");
         }
 
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()
-                || !(auth.getPrincipal() instanceof UserDetails ud)) {
-            throw new  AccessDeniedException("Unauthenticated");
-        }
-
-        String email = ((UserDetails) auth.getPrincipal()).getUsername();
-        User current = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String role  = current.getRole().getName();  // "Admin" / "Owner" / "Client"
-        Integer userId = current.getId();
+        User current = SecurityUtils.getCurrentUser(userRepository);
+        String roleName = current.getRole().getName();
 
         Apartments apartment = apartmentsRepository.findById(id)
-                .orElseThrow(() -> new  ApartmentNotFoundException(
-                        "Apartment not found with id: " + id));
+                .orElseThrow(() -> new  ApartmentNotFoundException("Apartment not found with id: " + id));
 
-        // If apartment is deleted, only Admin can see it
-        if (Boolean.TRUE.equals(apartment.getIsDeleted()) && !Admin.equals(role)) {
-            throw new  ApartmentNotFoundException(
-                    "Apartment not found with id: " + id);
+
+        if (Boolean.TRUE.equals(apartment.getIsDeleted()) && !Admin.equals(roleName)) {
+            throw new  ApartmentNotFoundException("Apartment not found with id: " + id);
+
         }
 
 
-        // Client: any non-deleted apartment is fine (handled by the deleted check above)
 
-        return mapApartmentToDTO(apartment, role);
+        return mapApartmentToDTO(apartment, roleName);
     }
 
 
 
     @Override
     public ApartmentsDTO createApartment(ApartmentsDTO dto) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails ud)) {
-            throw new AccessDeniedException("Unauthenticated");
-        }
-        String email = ((UserDetails) auth.getPrincipal()).getUsername();
-        User current = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User current = SecurityUtils.getCurrentUser(userRepository);
+        String roleName = current.getRole().getName();
 
-        String roleName = current.getRole().getName(); // "Owner"/"Admin"/"Client"
         if (!Owner.equals(roleName)) {
-            throw new AccessDeniedException(
-                    "Only Owner can create apartments");
+            throw new AccessDeniedException("Only Owner can create apartments");
         }
 
-        // Prevent creating on behalf of someone else
+
         if (dto.getOwnerId() != null && !dto.getOwnerId().equals(current.getId())) {
-            throw new AccessDeniedException(
-                    "You can only create apartments for your own account");
+            throw new AccessDeniedException("You can only create apartments for your own account");
         }
 
-        // Validate fields (you already have this helper)
         validateApartmentData(dto);
 
         Apartments apartment = Apartments.builder()
                 .title(dto.getTitle())
                 .monthlyRent(dto.getMonthlyRent())
                 .roomsNumber(dto.getRoomsNumber())
-                .owner(current)               // force the creator as owner
+                .owner(current)
                 .isDeleted(false)
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now())
@@ -220,47 +167,38 @@ public class ApartmentsImp implements ApartmentsService {
 
     @Override
     public ApartmentsDTO updateApartment(Integer id, ApartmentsDTO dto) {
-        if (id == null) throw new IllegalArgumentException("Apartment ID cannot be null");
-        validateApartmentData(dto); // your existing field validator
+        if (id == null)
+            throw new IllegalArgumentException("Apartment ID cannot be null");
 
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails ud)) {
-            throw new com.RentalApplication.rent.service.Exceptions.AccessDeniedException("Unauthenticated");
-        }
+        validateApartmentData(dto);
+        User current = SecurityUtils.getCurrentUser(userRepository);
 
-        String email = ((UserDetails) auth.getPrincipal()).getUsername();
-        User current = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Belt-and-suspenders: only Owner can update (even if another controller calls this)
         if (!Owner.equals(current.getRole().getName())) {
-            throw new com.RentalApplication.rent.service.Exceptions.AccessDeniedException("Only Owner can update apartments");
+            throw new AccessDeniedException("Only Owner can update apartments");
         }
 
         Apartments apartment = apartmentsRepository.findById(id)
-                .orElseThrow(() -> new com.RentalApplication.rent.service.Exceptions.ApartmentNotFoundException("Apartment not found"));
+                .orElseThrow(() -> new ApartmentNotFoundException("Apartment not found"));
 
-        // Must be the owner of this apartment
         if (!apartment.getOwner().getId().equals(current.getId())) {
-            throw new com.RentalApplication.rent.service.Exceptions.AccessDeniedException("You can only update your own apartments");
+            throw new AccessDeniedException("You can only update your own apartments");
         }
 
-        // No updates on deleted or rented apartments
         if (Boolean.TRUE.equals(apartment.getIsDeleted())) {
-            throw new com.RentalApplication.rent.service.Exceptions.ApartmentNotFoundException("Apartment has been deleted");
-        }
-        if (apartment.getClient() != null) {
-            throw new IllegalStateException("Cannot modify a rented apartment");
+            throw new ApartmentNotFoundException("Apartment has been deleted");
         }
 
-        // Apply ONLY allowed fields; ignore any ownerId/clientId/isDeleted in DTO
+        if (apartment.getClient() != null) {
+            throw new IllegalStateException("You can't modify a rented apartment");
+        }
+
         apartment.setTitle(dto.getTitle());
         apartment.setMonthlyRent(dto.getMonthlyRent());
         apartment.setRoomsNumber(dto.getRoomsNumber());
         apartment.setUpdatedAt(java.time.LocalDateTime.now());
 
         Apartments saved = apartmentsRepository.save(apartment);
-        return mapApartmentToDTO(saved, Owner); // role label for mapper
+        return mapApartmentToDTO(saved, Owner);
     }
 
 
@@ -271,41 +209,29 @@ public class ApartmentsImp implements ApartmentsService {
         throw new IllegalArgumentException("Apartment ID cannot be null");
     }
 
-    var auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails ud)) {
-        throw new com.RentalApplication.rent.service.Exceptions.AccessDeniedException("Unauthenticated");
-    }
+        User current = SecurityUtils.getCurrentUser(userRepository);
+        String roleName = current.getRole().getName();
 
-    String email = ((UserDetails) auth.getPrincipal()).getUsername();
-    User current = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+        Apartments apartment = apartmentsRepository.findById(id)
+            .orElseThrow(() -> new ApartmentNotFoundException("Apartment not found with id: " + id));
 
-    String roleName = current.getRole().getName(); // "Admin" / "Owner"
 
-    Apartments apartment = apartmentsRepository.findById(id)
-            .orElseThrow(() -> new com.RentalApplication.rent.service.Exceptions.ApartmentNotFoundException(
-                    "Apartment not found with id: " + id));
-
-    // already deleted?
     if (Boolean.TRUE.equals(apartment.getIsDeleted())) {
         throw new IllegalStateException("Apartment is already deleted");
     }
 
-    // permissions: Owner can only delete their own; Admin can delete any
+
     if (Owner.equals(roleName) && !apartment.getOwner().getId().equals(current.getId())) {
-        throw new com.RentalApplication.rent.service.Exceptions.AccessDeniedException(
-                "You can only delete your own apartments");
-    }
-    if (!Owner.equals(roleName) && !Admin.equals(roleName)) {
-        throw new com.RentalApplication.rent.service.Exceptions.AccessDeniedException(
-                "Only Admin and Owner can delete apartments");
+        throw new AccessDeniedException("You can only delete your own apartments");
     }
 
-    // if rented → free the client before soft delete (client_id -> NULL)
+    if (!Owner.equals(roleName) && !Admin.equals(roleName)) {
+        throw new AccessDeniedException("Only Admin and Owner can delete apartments");
+    }
+
     if (apartment.getClient() != null) {
         apartment.setClient(null);
-        // optional: also clear rentedAt if you don’t want history on deleted units
-        // apartment.setRentedAt(null);
+
     }
 
     apartment.setIsDeleted(true);
@@ -320,17 +246,10 @@ public class ApartmentsImp implements ApartmentsService {
             throw new IllegalArgumentException("Apartment ID cannot be null");
         }
 
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails)) {
-            throw new AccessDeniedException("Unauthenticated");
-        }
+        User current = SecurityUtils.getCurrentUser(userRepository);
+        String roleName = current.getRole().getName();
 
-        String email = ((UserDetails) auth.getPrincipal()).getUsername();
-        User client = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Must be a Client (defense-in-depth in case someone calls the service directly)
-        if (!Client.equals(client.getRole().getName())) {
+        if (!Client.equals(roleName)) {
             throw new AccessDeniedException("Only clients can rent apartments");
         }
 
@@ -347,13 +266,16 @@ public class ApartmentsImp implements ApartmentsService {
 
 
 
-        apartment.setClient(client);
+        apartment.setClient(current);
         apartment.setRentedAt(java.time.LocalDateTime.now());
         apartment.setUpdatedAt(java.time.LocalDateTime.now());
 
         Apartments saved = apartmentsRepository.save(apartment);
         return mapApartmentToDTO(saved, Client);
     }
+
+
+
 
     private void validateApartmentData(ApartmentsDTO dto) {
         if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {

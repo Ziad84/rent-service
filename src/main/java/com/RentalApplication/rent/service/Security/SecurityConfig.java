@@ -19,9 +19,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 
-    private final JWTAuthenticationFilter jwtAuthFilter;
+   // private final JWTAuthenticationFilter jwtAuthFilter;
     private final UsersDetailsService userDetailsService;
-    private final UserRepository userRepository;
+  //  private final UserRepository userRepository;
 
 
 
@@ -30,9 +30,9 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                           .requestMatchers("/api/v1/users/login", "/api/v1/users/register" ).permitAll() // login, register endpoints
-                              .requestMatchers("/api/v1/users/admin/**").hasRole("Admin")                 // admin endpoints
-                             .requestMatchers("/api/v1/users/owner/**").hasRole("Owner")                 // owner endpoints
+                           .requestMatchers("/api/v1/users/login", "/api/v1/users/register" ).permitAll()
+                              .requestMatchers("/api/v1/users/admin/**").hasRole("Admin")
+                             .requestMatchers("/api/v1/users/owner/**").hasRole("Owner")
                        .requestMatchers( "/api/v1/users/client/**").hasRole("Client")
                         .anyRequest().authenticated()
                 )
@@ -49,7 +49,7 @@ public class SecurityConfig {
 
 
 
-    @Bean
+  /*  @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
@@ -57,6 +57,8 @@ public class SecurityConfig {
         return provider;
     }
 
+
+   */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

@@ -13,10 +13,8 @@ public interface ApartmentsService {
 
     ApartmentsDTO createApartment(ApartmentsDTO dto);
 
-    //ApartmentsDTO updateApartment(Integer id, ApartmentsDTO dto, String currentUserRole, Integer currentUserId);
     ApartmentsDTO updateApartment(Integer id, ApartmentsDTO dto);
 
-    //void deleteApartment(Integer id, String currentUserRole, Integer currentUserId);
     void deleteApartment(Integer id);
 
 
@@ -24,7 +22,7 @@ public interface ApartmentsService {
 
  ApartmentsDTO rentApartment(Integer apartmentId);
 
- //ApartmentsDTO rentApartment(Integer apartmentId, Integer clientId);
+
 
 
 }

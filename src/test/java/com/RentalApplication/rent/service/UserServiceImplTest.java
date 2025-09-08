@@ -48,7 +48,7 @@ import static org.mockito.Mockito.*;
         @BeforeEach
         void setUp() {
             validator = Validation.buildDefaultValidatorFactory().getValidator();
-            service = new UserServiceImpl(userRepository, roleRepository, apartmentsRepository, passwordEncoder, jwtService, validator);
+            service = new UserServiceImpl(userRepository, roleRepository, apartmentsRepository, passwordEncoder, jwtService);
         }
 
         @Test
