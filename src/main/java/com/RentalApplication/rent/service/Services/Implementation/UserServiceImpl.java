@@ -142,7 +142,6 @@ public class UserServiceImpl implements UserService {
 
             String token = jwtService.generateToken(savedUser);
             return ResponseDTO.builder()
-                    .id(savedUser.getId())
                     .token(token)
                     .build();
 
@@ -163,7 +162,6 @@ public class UserServiceImpl implements UserService {
         }
         String token = jwtService.generateToken(user);
         return ResponseDTO.builder()
-                .id(user.getId())
                 .token(token)
                 .build();
 

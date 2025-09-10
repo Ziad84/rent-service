@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ApartmentsDTO {
+public class ApartmentsDTO  implements java.io.Serializable {
     private Integer id;
     private String title;
     private Integer monthlyRent;

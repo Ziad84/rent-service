@@ -1,7 +1,6 @@
 package com.RentalApplication.rent.service.Services.Interfaces;
 
 import com.RentalApplication.rent.service.DTO.ApartmentsDTO;
-import com.RentalApplication.rent.service.Entity.Apartments;
 
 import java.util.List;
 

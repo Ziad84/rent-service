@@ -4,20 +4,15 @@ import com.RentalApplication.rent.service.Entity.Apartments;
 import com.RentalApplication.rent.service.Entity.User;
 import com.RentalApplication.rent.service.Exceptions.AccessDeniedException;
 import com.RentalApplication.rent.service.Exceptions.ApartmentNotFoundException;
-import com.RentalApplication.rent.service.Exceptions.UserNotFoundException;
 import com.RentalApplication.rent.service.Repository.AppartmentsRepository;
 import com.RentalApplication.rent.service.Repository.UserRepository;
 import com.RentalApplication.rent.service.Services.Interfaces.ApartmentsService;
 import com.RentalApplication.rent.service.DTO.ApartmentsDTO;
 import com.RentalApplication.rent.service.Utils.SecurityUtils;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -64,6 +59,8 @@ public class ApartmentsImp implements ApartmentsService {
 
 
     @Override
+    @Cacheable(cacheNames = "allApartments", key = "T(org.springframework.security.core.context.SecurityContextHolder)"
+            + ".getContext().getAuthentication().getName()")
     public List<ApartmentsDTO> getAllApartments() {
         User current = SecurityUtils.getCurrentUser(userRepository);
         String roleName = current.getRole().getName();
@@ -91,6 +88,8 @@ public class ApartmentsImp implements ApartmentsService {
 
 
     @Override
+    @Cacheable(cacheNames = "availableApartments", key = "T(org.springframework.security.core.context.SecurityContextHolder)" +
+            ".getContext().getAuthentication().getName()")
     public List<ApartmentsDTO> viewAvailableApartments() {
 
         User current = SecurityUtils.getCurrentUser(userRepository);

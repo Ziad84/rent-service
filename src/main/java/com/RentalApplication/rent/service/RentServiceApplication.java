@@ -1,13 +1,13 @@
 package com.RentalApplication.rent.service;
 
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 
-import java.util.Base64;
 
 @SpringBootApplication
+@EnableCaching
 public class RentServiceApplication {
 
 	public static void main(String[] args) {

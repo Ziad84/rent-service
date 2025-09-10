@@ -25,9 +25,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     private final UsersDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
 
@@ -45,18 +43,15 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
                 if (jwtService.isTokenValid(jwt)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                           // userId,  // Use userId instead of username/email
                             userDetails,
                             null,
                             userDetails.getAuthorities()
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.debug("Successfully authenticated user ID: {}", userId);
                 }
             }
         } catch (Exception e) {
-            log.error("Error processing token: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
 
