@@ -1,10 +1,8 @@
 package com.RentalApplication.rent.service.Security;
 
-import com.RentalApplication.rent.service.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,11 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-/*
-    private final JWTAuthenticationFilter jwtAuthFilter;
-    private final UsersDetailsService userDetailsService;
-    private final UserRepository userRepository;
-*/
+
 
 
     @Bean
@@ -30,10 +24,10 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                           .requestMatchers("/api/v1/users/login", "/api/v1/users/register" ).permitAll()
-                              .requestMatchers("/api/v1/users/admin/**").hasRole("Admin")
-                             .requestMatchers("/api/v1/users/owner/**").hasRole("Owner")
-                       .requestMatchers( "/api/v1/users/client/**").hasRole("Client")
+                        .requestMatchers("/api/v1/users/login", "/api/v1/users/register" ).permitAll()
+                        .requestMatchers("/api/v1/users/admin/**").hasRole("Admin")
+                        .requestMatchers("/api/v1/users/owner/**").hasRole("Owner")
+                        .requestMatchers( "/api/v1/users/client/**").hasRole("Client")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -44,27 +38,11 @@ public class SecurityConfig {
 
 
 
-/*
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
-
- */
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+
 }
-
-
-
-
-
-

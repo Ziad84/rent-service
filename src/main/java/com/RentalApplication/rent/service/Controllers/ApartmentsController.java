@@ -1,22 +1,13 @@
 package com.RentalApplication.rent.service.Controllers;
 
 import com.RentalApplication.rent.service.DTO.ApartmentsDTO;
-import com.RentalApplication.rent.service.DTO.ErrorResponseDTO;
 import com.RentalApplication.rent.service.DTO.RentRequestDTO;
-import com.RentalApplication.rent.service.Entity.User;
-import com.RentalApplication.rent.service.Exceptions.AccessDeniedException;
-import com.RentalApplication.rent.service.Exceptions.ApartmentNotFoundException;
-import com.RentalApplication.rent.service.Exceptions.UserNotFoundException;
-import com.RentalApplication.rent.service.Repository.UserRepository;
+
 import com.RentalApplication.rent.service.Services.Interfaces.ApartmentsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
-
 
 import java.util.List;
 import java.util.Map;
@@ -28,7 +19,7 @@ import java.util.Map;
     public class ApartmentsController {
 
         private final ApartmentsService apartmentsService;
-        private final UserRepository userRepository;
+
 
         @GetMapping("/Allappartments")
         @PreAuthorize("hasAnyRole('Admin', 'Owner', 'Client')")
@@ -68,7 +59,7 @@ import java.util.Map;
 
 
         @GetMapping("/available")
-        @PreAuthorize("hasRole('Client','Admin','Owner')")
+        @PreAuthorize("hasAnyRole('Client','Admin','Owner')")
         public ResponseEntity<List<ApartmentsDTO>> viewAvailableApartments() {
             return ResponseEntity.ok(apartmentsService.viewAvailableApartments());
 
@@ -76,8 +67,8 @@ import java.util.Map;
 
         @PostMapping("/rent")
         @PreAuthorize("hasRole('Client')")
-        public ResponseEntity<ApartmentsDTO> rentApartment(
-                @RequestBody RentRequestDTO request) {
+        public ResponseEntity<ApartmentsDTO> rentApartment(@RequestBody RentRequestDTO request) {
+
             return ResponseEntity.ok(apartmentsService.rentApartment(request.getApartmentId()));
         }
 

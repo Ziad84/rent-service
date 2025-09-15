@@ -12,7 +12,6 @@ import com.RentalApplication.rent.service.Utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -188,7 +187,7 @@ public class ApartmentsImp implements ApartmentsService {
         }
 
         if (apartment.getClient() != null) {
-            throw new IllegalStateException("You can't modify a rented apartment");
+            throw new IllegalStateException("You can't update a rented apartment");
         }
 
         apartment.setTitle(dto.getTitle());

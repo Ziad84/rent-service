@@ -30,7 +30,7 @@ public class RegisterUserDTO {
     private String password;
 
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^\\d{10}$", message = "Invalid phone number format or it's already used")
+    @Pattern(regexp = "^\\d{10}$", message = "Invalid phone number format ")
     private String phoneNumber;
 
     @NotBlank(message = "Role is required")

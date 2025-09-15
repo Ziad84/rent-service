@@ -1,17 +1,16 @@
 package com.RentalApplication.rent.service.Exceptions;
 
 import com.RentalApplication.rent.service.DTO.RegisterResponseDTO;
-import com.RentalApplication.rent.service.DTO.UpdateUserDTO;
+import com.RentalApplication.rent.service.DTO.UpdateUserResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -26,6 +25,7 @@ public class GlobalExceptionHandler {
     }
 
 
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RegisterResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -34,7 +34,6 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(RegisterResponseDTO.builder()
-                .status(false)
                 .message("Incorrect format")
                 .errors(errors)
                 .build());
@@ -46,50 +45,45 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<RegisterResponseDTO> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
         return ResponseEntity.badRequest().body(RegisterResponseDTO.builder()
-                .status(false)
                 .message("Registration failed")
                 .errors(Map.of("email", ex.getMessage()))
                 .build());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<UpdateUserDTO> handleIllegalArgument(
-            IllegalArgumentException ex, HttpServletRequest request) {
+    public ResponseEntity<UpdateUserResponseDTO> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
 
-        UpdateUserDTO error = new UpdateUserDTO(
+        UpdateUserResponseDTO error = new UpdateUserResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                LocalDateTime.now()
+                ex.getMessage()
+
         );
 
         return ResponseEntity.badRequest().body(error);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<UpdateUserDTO> handleRuntime(
-            RuntimeException ex, HttpServletRequest request) {
 
-        UpdateUserDTO error = new UpdateUserDTO(
-                HttpStatus.NOT_FOUND.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                LocalDateTime.now()
-        );
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<UpdateUserDTO> handleAccessDenied(
+    public ResponseEntity<UpdateUserResponseDTO> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
-        UpdateUserDTO body = new UpdateUserDTO(
+        UpdateUserResponseDTO body = new UpdateUserResponseDTO(
                 HttpStatus.FORBIDDEN.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                LocalDateTime.now()
+                ex.getMessage()
         );
         return  ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<UpdateUserResponseDTO> handleRuntime(
+            RuntimeException ex, HttpServletRequest request) {
+
+        UpdateUserResponseDTO error = new UpdateUserResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
 }

@@ -3,6 +3,7 @@ package com.RentalApplication.rent.service.Controllers;
 
 import com.RentalApplication.rent.service.DTO.*;
 import com.RentalApplication.rent.service.Services.Interfaces.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ public class UserController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<ResponseDTO> register(@RequestBody RegisterUserDTO dto) {
+    public ResponseEntity<ResponseDTO> register(@Valid @RequestBody RegisterUserDTO dto) {
         ResponseDTO responseDTO = usersService.registerUser(dto);
         return ResponseEntity.ok(responseDTO);
 
@@ -52,6 +53,8 @@ public class UserController {
         return ResponseEntity.ok(usersService.getUserByIdAsAdmin(id));
     }
 
+
+
     @DeleteMapping("/admin/{id}")
     @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<Map<String, String>> deleteUserAsAdmin(@PathVariable Integer id) {
@@ -64,6 +67,7 @@ public class UserController {
     @PutMapping("/client/{id}")
     @PreAuthorize("hasRole('Client')")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Integer id, @RequestBody UserDTO dto) {
+
         return ResponseEntity.ok(usersService.updateUser(id, dto));
     }
 

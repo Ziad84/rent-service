@@ -2,6 +2,7 @@ package com.RentalApplication.rent.service.Services.Implementation;
 
 
 import com.RentalApplication.rent.service.Entity.Apartments;
+import com.RentalApplication.rent.service.Entity.Roles;
 import com.RentalApplication.rent.service.Entity.User;
 import com.RentalApplication.rent.service.Exceptions.AccessDeniedException;
 import com.RentalApplication.rent.service.Exceptions.AuthenticationException;
@@ -114,6 +115,7 @@ public class UserServiceImpl implements UserService {
     public ResponseDTO registerUser( RegisterUserDTO dto) {
 
 
+
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new EmailAlreadyExistsException("This email address is already registered");
         }
@@ -122,7 +124,7 @@ public class UserServiceImpl implements UserService {
         }
 
 
-        var role = roleRepository.findByName(dto.getRoleName());
+        Roles role = roleRepository.findByName(dto.getRoleName());
         if (role == null) {
             throw new IllegalArgumentException("Invalid role: " + dto.getRoleName());
         }
@@ -150,6 +152,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseDTO login(String username, String password) {
+
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new AuthenticationException("Email is not correct"));
 
@@ -160,6 +163,7 @@ public class UserServiceImpl implements UserService {
         if (user.getIsDeleted()) {
             throw new AuthenticationException("This account is deleted");
         }
+
         String token = jwtService.generateToken(user);
         return ResponseDTO.builder()
                 .token(token)

@@ -3,8 +3,6 @@ package com.RentalApplication.rent.service.Services.Interfaces;
 import com.RentalApplication.rent.service.DTO.RegisterUserDTO;
 import com.RentalApplication.rent.service.DTO.ResponseDTO;
 import com.RentalApplication.rent.service.DTO.UserDTO;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 

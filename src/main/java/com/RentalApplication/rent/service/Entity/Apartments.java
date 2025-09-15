@@ -58,6 +58,7 @@ public class Apartments {
 
     @PreUpdate
     public void preUpdate() {
+
         updatedAt = LocalDateTime.now();
     }
 

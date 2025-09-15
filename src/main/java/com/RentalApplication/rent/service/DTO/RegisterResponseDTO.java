@@ -15,9 +15,7 @@ import java.util.Map;
 
 public class RegisterResponseDTO {
     private String message;
-    private boolean status;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, String> errors;
 
 

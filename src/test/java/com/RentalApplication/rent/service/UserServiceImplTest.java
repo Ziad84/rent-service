@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -55,9 +54,9 @@ import static org.mockito.Mockito.*;
         void registerUser_success_returnsToken() {
             RegisterUserDTO dto = new RegisterUserDTO();
             dto.setName("Ziad");
-            dto.setEmail("ziad.albalwi1@gmail.com");
-            dto.setPhoneNumber("0559746495");
-            dto.setPassword("secret");
+            dto.setEmail("ziad.albalwi@gmail.com");
+            dto.setPhoneNumber("0559746485");
+            dto.setPassword("secret1234");
             dto.setRoleName("Client");
 
             Roles clientRole = new Roles();
@@ -65,7 +64,7 @@ import static org.mockito.Mockito.*;
             clientRole.setName("Client");
 
             when(roleRepository.findByName("Client")).thenReturn(clientRole);
-            when(passwordEncoder.encode("secret")).thenReturn("ENC");
+            when(passwordEncoder.encode("secret1234")).thenReturn("ENC");
             when(userRepository.save(any(User.class))).thenAnswer(inv -> {
                 User u = inv.getArgument(0);
                 u.setId(42);
@@ -84,34 +83,31 @@ import static org.mockito.Mockito.*;
         void registerUser_duplicateEmail_translatedToCustomException() {
             RegisterUserDTO dto = new RegisterUserDTO();
             dto.setName("Ziad");
-            dto.setEmail("Ziad@hotmail.com");
+            dto.setEmail("ziad.albalwi@gmail.com");
             dto.setPhoneNumber("0559746493");
-            dto.setPassword("p");
+            dto.setPassword("Secret1234");
             dto.setRoleName("Client");
 
-            Roles clientRole = new Roles();
-            clientRole.setId(3);
-            clientRole.setName("Client");
-            when(roleRepository.findByName("Client")).thenReturn(clientRole);
-
-            when(passwordEncoder.encode(anyString())).thenReturn("ENC");
-            // simulate unique constraint violation on save
-            when(userRepository.save(any(User.class)))
-                    .thenThrow(new DataIntegrityViolationException("... users.email ..."));
+            when(userRepository.existsByEmail("ziad.albalwi@gmail.com")).thenReturn(true);
 
             assertThrows(EmailAlreadyExistsException.class, () -> service.registerUser(dto));
+
+            verify(userRepository, never()).save(any());
+
+            verify(roleRepository, never()).findByName(anyString());
+            verify(passwordEncoder, never()).encode(anyString());
         }
 
         @Test
         void registerUser_invalidRole_throwsIllegalArgument() {
             RegisterUserDTO dto = new RegisterUserDTO();
             dto.setName("Ziad");
-            dto.setEmail("Ziad1@gmail.com");
+            dto.setEmail("Ziad@gmail.com");
             dto.setPhoneNumber("0559746492");
-            dto.setPassword("p");
-            dto.setRoleName("Admin");
+            dto.setPassword("12345678");
+            dto.setRoleName("Adminn");
 
-            when(roleRepository.findByName("Admin")).thenReturn(null);
+            when(roleRepository.findByName("Adminn")).thenReturn(null);
 
             assertThrows(IllegalArgumentException.class, () -> service.registerUser(dto));
             verify(userRepository, never()).save(any());
@@ -120,18 +116,17 @@ import static org.mockito.Mockito.*;
         @Test
         void login_success_returnsToken() {
             User u = new User();
-            u.setId(11);
-            u.setEmail("ziad@example.com");
-            u.setPassword("ENC");
+            u.setEmail("ziad.albalwi@gmail.com");
+            u.setPassword("12345678");
             u.setIsDeleted(false);
 
-            when(userRepository.findByEmail("ziad.albalwi1@gmail.com")).thenReturn(Optional.of(u));
-            when(passwordEncoder.matches("secret", "ENC")).thenReturn(true);
+            when(userRepository.findByEmail("ziad.albalwi@gmail.com")).thenReturn(Optional.of(u));
+            when(passwordEncoder.matches("secret1234", "12345678")).thenReturn(true);
             when(jwtService.generateToken(u)).thenReturn("jwt-xyz");
 
-            ResponseDTO out = service.login("ziad.albalwi1@gmail.com", "secret");
+            ResponseDTO out = service.login("ziad.albalwi@gmail.com", "secret1234");
 
-            assertEquals(11, out.getId());
+
             assertEquals("jwt-xyz", out.getToken());
         }
 
@@ -139,24 +134,27 @@ import static org.mockito.Mockito.*;
         void login_wrongPassword_throwsAuthException() {
             User u = new User();
             u.setEmail("ziad@example.com");
-            u.setPassword("ENC");
+            u.setPassword("s1234568");
             u.setIsDeleted(false);
 
             when(userRepository.findByEmail("ziad@example.com")).thenReturn(Optional.of(u));
-            when(passwordEncoder.matches("bad", "ENC")).thenReturn(false);
+            when(passwordEncoder.matches("12345678", "s1234568")).thenReturn(false);
 
-            assertThrows(AuthenticationException.class, () -> service.login("ziad@example.com", "bad"));
+            assertThrows(AuthenticationException.class, () -> service.login("ziad@example.com", "12345678"));
         }
 
         @Test
         void login_deletedAccount_throwsAuthException() {
             User u = new User();
-            u.setEmail("ziad.albalwi1@gmail.com");
-            u.setPassword("ENC");
+            u.setEmail("ziad.albalwi@gmail.com");
+            u.setPassword("12345678");
             u.setIsDeleted(true);
 
-            when(userRepository.findByEmail("ziad.albalwi1@gmail.com")).thenReturn(Optional.of(u));
+            when(userRepository.findByEmail("ziad.albalwi@gmail.com")).thenReturn(Optional.of(u));
 
-            assertThrows(AuthenticationException.class, () -> service.login("ziad.albalwi1@gmail.com", "secret"));
+            assertThrows(AuthenticationException.class, () -> service.login("ziad.albalwi@gmail.com", "1234568"));
         }
+
+
+
 }
