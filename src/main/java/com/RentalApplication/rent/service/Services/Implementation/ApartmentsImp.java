@@ -183,7 +183,7 @@ public class ApartmentsImp implements ApartmentsService {
         }
 
         if (Boolean.TRUE.equals(apartment.getIsDeleted())) {
-            throw new ApartmentNotFoundException("Apartment has been deleted");
+            throw new ApartmentNotFoundException("this Apartment was deleted");
         }
 
         if (apartment.getClient() != null) {
@@ -255,7 +255,7 @@ public class ApartmentsImp implements ApartmentsService {
                 .orElseThrow(() -> new ApartmentNotFoundException("Apartment not found"));
 
         if (Boolean.TRUE.equals(apartment.getIsDeleted())) {
-            throw new ApartmentNotFoundException("Apartment has been deleted");
+            throw new ApartmentNotFoundException("this Apartment was deleted");
         }
 
         if (apartment.getClient() != null) {

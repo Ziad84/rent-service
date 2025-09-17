@@ -65,8 +65,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<UpdateUserResponseDTO> handleAccessDenied(
-            AccessDeniedException ex, HttpServletRequest request) {
+    public ResponseEntity<UpdateUserResponseDTO> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         UpdateUserResponseDTO body = new UpdateUserResponseDTO(
                 HttpStatus.FORBIDDEN.value(),
                 ex.getMessage()
@@ -76,8 +75,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<UpdateUserResponseDTO> handleRuntime(
-            RuntimeException ex, HttpServletRequest request) {
+    public ResponseEntity<UpdateUserResponseDTO> handleRuntime(RuntimeException ex, HttpServletRequest request) {
 
         UpdateUserResponseDTO error = new UpdateUserResponseDTO(
                 HttpStatus.NOT_FOUND.value(),

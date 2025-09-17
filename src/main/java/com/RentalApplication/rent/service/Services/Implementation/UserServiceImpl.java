@@ -198,6 +198,7 @@ public class UserServiceImpl implements UserService {
 
         current.setName(dto.getName());
         current.setEmail(dto.getEmail());
+        current.setPassword(passwordEncoder.encode(dto.getPassword()));
         current.setPhoneNumber(dto.getPhoneNumber());
         current.setUpdatedAt(java.time.LocalDateTime.now());
 

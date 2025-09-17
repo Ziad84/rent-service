@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 
 
     @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
-    class UserServiceImplTest {
+    class UserLoginRegisterTest {
 
         @Mock
         private UserRepository userRepository;

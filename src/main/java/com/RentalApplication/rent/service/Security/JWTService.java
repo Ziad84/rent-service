@@ -20,8 +20,7 @@ public class JWTService {
     private final SecretKey key;
     private final long tokenExpirationMs;
 
-    public JWTService(@Value("${jwt.secret}") String base64Secret, @Value("${jwt.expiration-ms}") long tokenExpirationMs
-    ) {
+    public JWTService(@Value("${jwt.secret}") String base64Secret, @Value("${jwt.expiration-ms}") long tokenExpirationMs) {
 
         this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(base64Secret));
         this.tokenExpirationMs = tokenExpirationMs;
