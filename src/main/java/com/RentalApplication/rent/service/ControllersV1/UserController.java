@@ -1,4 +1,4 @@
-package com.RentalApplication.rent.service.Controllers;
+package com.RentalApplication.rent.service.ControllersV1;
 
 
 import com.RentalApplication.rent.service.DTO.*;
@@ -27,7 +27,6 @@ public class UserController {
     public ResponseEntity<ResponseDTO> register(@Valid @RequestBody RegisterUserDTO dto) {
         ResponseDTO responseDTO = usersService.registerUser(dto);
         return ResponseEntity.ok(responseDTO);
-
 
     }
 

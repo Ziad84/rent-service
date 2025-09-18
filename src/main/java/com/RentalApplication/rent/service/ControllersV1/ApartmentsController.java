@@ -1,4 +1,4 @@
-package com.RentalApplication.rent.service.Controllers;
+package com.RentalApplication.rent.service.ControllersV1;
 
 import com.RentalApplication.rent.service.DTO.ApartmentsDTO;
 import com.RentalApplication.rent.service.DTO.RentRequestDTO;
